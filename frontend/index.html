@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Clínica · Cadastro de Pacientes</title>
+
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+<body>
+
+ 
+  <div id="toast" class="toast"></div>
+
+  
+  <header class="app-header">
+    <div class="header-inner">
+
+      <div class="logo">
+        <span class="logo-dot"></span>
+        <span class="logo-text">Clínica+</span>
+      </div>
+
+      <div class="header-meta">
+        <span id="record-count" class="badge">0 pacientes</span>
+
+        <div id="connection-status" class="conn-status offline">
+          <span class="conn-dot"></span>
+          <span class="conn-label">offline</span>
+        </div>
+      </div>
+
+    </div>
+  </header>
+
+ 
+  <main class="main-content">
+
+   
+    <section class="form-panel">
+
+      <div class="panel-header">
+        <h2>
+          <i class="ph ph-user-plus"></i>
+          Novo Paciente
+        </h2>
+      </div>
+
+      <form id="form">
+
+        <div class="form-grid">
+
+          
+          <div class="form-group">
+            <label>Nome *</label>
+            <div class="input-wrap">
+              <i class="ph ph-user input-icon"></i>
+              <input type="text" id="nome" placeholder="Nome completo" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Celular</label>
+            <div class="input-wrap">
+              <i class="ph ph-phone input-icon"></i>
+              <input type="text" id="telefone" placeholder="(00) 00000-0000">
+            </div>
+          </div>
+
+      
+          <div class="form-group">
+            <label>Email</label>
+            <div class="input-wrap">
+              <i class="ph ph-envelope input-icon"></i>
+              <input type="email" id="email" placeholder="email@exemplo.com">
+            </div>
+          </div>
+
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">
+            <i class="ph ph-floppy-disk"></i>
+            Cadastrar
+          </button>
+        </div>
+
+      </form>
+
+    </section>
+
+  
+    <section class="table-panel">
+
+      <div class="panel-header">
+        <h2>
+          <i class="ph ph-table"></i>
+          Pacientes
+        </h2>
+
+        <div class="table-controls">
+          <input type="search" id="search" placeholder="Buscar paciente...">
+          <button id="refresh" class="btn btn-ghost">
+            <i class="ph ph-arrows-clockwise"></i>
+          </button>
+        </div>
+      </div>
+
+    
+      <div id="loading" class="table-loader">
+        <div class="spinner"></div>
+        <p>Carregando...</p>
+      </div>
+
+      
+      <div id="empty" class="table-empty hidden">
+        <i class="ph ph-folder-open"></i>
+        <p>Nenhum paciente encontrado</p>
+      </div>
+
+      
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Telefone</th>
+              <th>Email</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+
+          <tbody id="table-body">
+          
+          </tbody>
+        </table>
+      </div>
+
+    </section>
+
+  </main>
+
+  <script type="module" src="script.js"></script>
+</body>
+</html>
