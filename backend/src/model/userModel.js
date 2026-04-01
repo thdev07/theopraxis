@@ -1,4 +1,4 @@
-import supabase from '../config/supabase.js';
+import { supabase } from '../config/supabase.js';
 
 export const fetchAll = async () => {
     const { data, error } = await supabase.from('pacientes').select('*');

@@ -1,139 +1,150 @@
-import { supabase } from './supabase.js'  
 
-const form = document.getElementById('form')
-const fieldNome = document.getElementById('nome')
-const fieldEmail = document.getElementById('email')
-const fieldTelefone = document.getElementById('telefone')
+const API_URL = '/api';
 
-const tableBody = document.getElementById('table-body')
-const tableLoader = document.getElementById('loading')
-const tableEmpty = document.getElementById('empty')
-const recordCountBadge = document.getElementById('record-count')
-const connStatus = document.getElementById('connection-status')
-const searchInput = document.getElementById('search')
-const btnRefresh = document.getElementById('refresh')
-const toast = document.getElementById('toast')
+async function apiFetch(path, method = 'GET', body = null) {
+  const options = {
+    method,
+    headers: { 'Content-Type': 'application/json' }
+  };
 
-let allRecords = []
+  if (body) options.body = JSON.stringify(body);
+
+  const response = await fetch(`${API_URL}${path}`, options);
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.message || `Erro ${response.status}`);
+  }
+
+  return response.json();
+}
+
+
+let allRecords = [];
+
+const form = document.getElementById('form');
+const fieldNome = document.getElementById('nome');
+const fieldEmail = document.getElementById('email');
+const fieldTelefone = document.getElementById('telefone');
+
+const tableBody = document.getElementById('table-body');
+const tableLoader = document.getElementById('loading');
+const tableEmpty = document.getElementById('empty');
+const recordCountBadge = document.getElementById('record-count');
+const connStatus = document.getElementById('connection-status');
+const searchInput = document.getElementById('search');
+const btnRefresh = document.getElementById('refresh');
+const toast = document.getElementById('toast');
+
+
+function showToast(message, type = 'success') {
+  toast.textContent = message;
+  toast.className = `toast show ${type}`;
+  setTimeout(() => toast.className = 'toast', 3000);
+}
 
 
 
 async function addPatient(nome, email, telefone) {
-  const { data, error } = await supabase
-    .from('pacientes')
-    .insert([{ nome, email, telefone }])
-    .select()
-
-  if (error) throw error
-  return data
+  return apiFetch('/pacientes', 'POST', { nome, email, telefone });
 }
 
 async function loadRecords() {
-  tableLoader.classList.remove('hidden')
-  tableBody.innerHTML = ''
-  tableEmpty.classList.add('hidden')
+  tableLoader.classList.remove('hidden');
+  tableBody.innerHTML = '';
+  tableEmpty.classList.add('hidden');
 
   try {
-    const { data, error } = await supabase.from('pacientes').select('*')
-    if (error) throw error
+    const data = await apiFetch('/pacientes');
+    allRecords = data.data || data;
 
-    allRecords = data || []
+    connStatus.classList.replace('offline', 'online');
+    connStatus.querySelector('.conn-label').textContent = 'online';
 
-    connStatus.classList.remove('offline')
-    connStatus.classList.add('online')
-    connStatus.querySelector('.conn-label').textContent = 'online'
-
-    renderTable(allRecords)
+    renderTable(allRecords);
   } catch (err) {
-    console.error(err)
-    showToast('Erro ao conectar com o Supabase', 'error')
-    connStatus.classList.remove('online')
-    connStatus.classList.add('offline')
-    connStatus.querySelector('.conn-label').textContent = 'offline'
+    console.error(err);
+    showToast('Erro ao conectar com a API', 'error');
+
+    connStatus.classList.replace('online', 'offline');
+    connStatus.querySelector('.conn-label').textContent = 'offline';
   } finally {
-    tableLoader.classList.add('hidden')
+    tableLoader.classList.add('hidden');
   }
 }
 
 function renderTable(records) {
-  tableBody.innerHTML = ''
-  recordCountBadge.textContent = `${records.length} paciente(s)`
+  tableBody.innerHTML = '';
+  recordCountBadge.textContent = `${records.length} paciente(s)`;
 
   if (!records.length) {
-    tableEmpty.classList.remove('hidden')
-    return
+    tableEmpty.classList.remove('hidden');
+    return;
   }
 
   records.forEach(p => {
-    const tr = document.createElement('tr')
+    const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${p.nome}</td>
       <td>${p.telefone || '-'}</td>
       <td>${p.email || '-'}</td>
       <td>
         <button class="btn btn-ghost btn-delete" data-id="${p.id}">
-          <i class="ph ph-trash"></i>
+          🗑️
         </button>
       </td>
-    `
-    tableBody.appendChild(tr)
-  })
-
+    `;
+    tableBody.appendChild(tr);
+  });
 
   document.querySelectorAll('.btn-delete').forEach(btn => {
-    btn.addEventListener('click', () => deletePatient(btn.dataset.id))
-  })
+    btn.addEventListener('click', () => deletePatient(btn.dataset.id));
+  });
 }
 
 async function deletePatient(id) {
-  if (!confirm('Deseja realmente excluir este paciente?')) return
+  if (!confirm('Deseja realmente excluir este paciente?')) return;
 
-  const { error } = await supabase.from('pacientes').delete().eq('id', id)
-  if (error) return showToast(error.message, 'error')
-
-  showToast('Paciente removido com sucesso!', 'success')
-  loadRecords()
+  try {
+    await apiFetch(`/pacientes/${id}`, 'DELETE');
+    showToast('Paciente removido com sucesso!', 'success');
+    loadRecords();
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
 }
-
-function showToast(message, type = 'success') {
-  toast.textContent = message
-  toast.className = `toast show ${type}`
-  setTimeout(() => toast.className = 'toast', 3000)
-}
-
 
 
 
 form.addEventListener('submit', async (e) => {
-  e.preventDefault()
+  e.preventDefault();
 
-  const nome = fieldNome.value.trim()
-  const email = fieldEmail.value.trim()
-  const telefone = fieldTelefone.value.trim()
+  const nome = fieldNome.value.trim();
+  const email = fieldEmail.value.trim();
+  const telefone = fieldTelefone.value.trim();
 
-  if (!nome) return showToast('Preencha o nome', 'error')
+  if (!nome) return showToast('Preencha o nome', 'error');
 
   try {
-    await addPatient(nome, email, telefone)
-    showToast('Paciente cadastrado com sucesso!', 'success')
-    form.reset()
-    loadRecords()
+    await addPatient(nome, email, telefone);
+    showToast('Paciente cadastrado com sucesso!', 'success');
+    form.reset();
+    loadRecords();
   } catch (err) {
-    showToast(err.message, 'error')
+    showToast(err.message, 'error');
   }
-})
-
+});
 
 searchInput.addEventListener('input', () => {
-  const q = searchInput.value.toLowerCase()
-  const filtered = allRecords.filter(
-    p => p.nome.toLowerCase().includes(q) || (p.email && p.email.toLowerCase().includes(q))
-  )
-  renderTable(filtered)
-})
+  const q = searchInput.value.toLowerCase();
+  const filtered = allRecords.filter(p =>
+    p.nome.toLowerCase().includes(q) ||
+    (p.email && p.email.toLowerCase().includes(q))
+  );
+  renderTable(filtered);
+});
+
+btnRefresh.addEventListener('click', loadRecords);
 
 
-btnRefresh.addEventListener('click', loadRecords)
-
-
-loadRecords()
+loadRecords();
