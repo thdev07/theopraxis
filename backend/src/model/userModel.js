@@ -1,9 +1,14 @@
 import supabase from '../config/supabase.js';
 
 export const fetchAll = async () => {
-    return await supabase.from('users').select('*');
+    const { data, error } = await supabase.from('pacientes').select('*');
+    return { data, error };
 }
 
 export const create = async (nome, email, telefone) => {
-    return await supabase.from('users').insert({ nome, email, telefone }).select();
+    const { data, error } = await supabase
+        .from('pacientes')
+        .insert([{ nome, email, telefone }])
+        .select();
+    return { data, error };
 }

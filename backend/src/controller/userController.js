@@ -1,9 +1,10 @@
-import * as userModel from '../model/userModel.js'
+import * as userModel from '../model/userModel.js';
 
 export const fetchAll = async (req, res) => {
     const { data, error } = await userModel.fetchAll();
 
     if (error) {
+        console.error('Erro ao buscar pacientes:', error.message);
         return res.status(400).json({ error: error.message });
     }
 
@@ -11,13 +12,18 @@ export const fetchAll = async (req, res) => {
 }
 
 export const create = async (req, res) => {
-    const { nOme, email, telefone } = req.body;
-    const { error, data } = await userModel.create(nome, email, telefone);
+    const { nome, email, telefone } = req.body;
 
-    if (error) {
-        console.log(`error: ${error.message}`)
-        return res.status(400).json({ error: error.message});
+    if (!nome) {
+        return res.status(400).json({ error: 'O campo nome é obrigatório.' });
     }
 
-    res.json(data);
+    const { data, error } = await userModel.create(nome, email, telefone);
+
+    if (error) {
+        console.error('Erro ao criar paciente:', error.message);
+        return res.status(400).json({ error: error.message });
+    }
+
+    res.status(201).json(data);
 }
